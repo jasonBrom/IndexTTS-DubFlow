@@ -1,0 +1,22 @@
+name: Feature request
+description: 提议功能或平台改进
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: 要解决的问题
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 建议方案
+    validations:
+      required: true
+  - type: textarea
+    id: upstream
+    attributes:
+      label: 上游依据或兼容性影响
+

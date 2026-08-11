@@ -1,0 +1,129 @@
+diff --git a/indextts/infer_v2_5.py b/indextts/infer_v2_5.py
+index 4b37643..f9baee4 100644
+--- a/indextts/infer_v2_5.py
++++ b/indextts/infer_v2_5.py
+@@ -506,8 +506,9 @@ class IndexTTS2:
+     def infer(self, spk_audio_prompt, text, output_path, lang,
+               emo_audio_prompt=None, emo_alpha=1.0,
+               emo_vector=None, use_emo_text=False, emo_text=None, use_random=False, interval_silence=200,
+-              verbose=False, max_text_tokens_per_segment=120, stream_return=False, more_segment_before=0, duration_factor=1.0, text_normalization=True, **generation_kwargs):
+-        if self.low_vram and not stream_return and len(text) > 40:
++              verbose=False, max_text_tokens_per_segment=120, stream_return=False, more_segment_before=0,
++              duration_factor=1.0, target_duration_seconds=None, text_normalization=True, **generation_kwargs):
++        if self.low_vram and target_duration_seconds is None and not stream_return and len(text) > 40:
+             segments = self.split_text_by_punctuation(text, max_chars=40)
+             if verbose:
+                 print(f">> Low-VRAM: split into {len(segments)} segments: {segments}")
+@@ -518,7 +519,9 @@ class IndexTTS2:
+                     spk_audio_prompt, seg_text, None, lang,
+                     emo_audio_prompt, emo_alpha, emo_vector,
+                     use_emo_text, emo_text, use_random, 0,
+-                    verbose, max_text_tokens_per_segment, False, 0, duration_factor=duration_factor, text_normalization=text_normalization, **generation_kwargs
++                    verbose, max_text_tokens_per_segment, False, 0, duration_factor=duration_factor,
++                    target_duration_seconds=target_duration_seconds, text_normalization=text_normalization,
++                    **generation_kwargs
+                 )
+                 result = None
+                 for result in gen:
+@@ -552,7 +555,9 @@ class IndexTTS2:
+                 emo_audio_prompt, emo_alpha,
+                 emo_vector,
+                 use_emo_text, emo_text, use_random, interval_silence,
+-                verbose, max_text_tokens_per_segment, stream_return, more_segment_before, duration_factor=duration_factor, text_normalization=text_normalization, **generation_kwargs
++                verbose, max_text_tokens_per_segment, stream_return, more_segment_before,
++                duration_factor=duration_factor, target_duration_seconds=target_duration_seconds,
++                text_normalization=text_normalization, **generation_kwargs
+             )
+         else:
+             try:
+@@ -561,7 +566,9 @@ class IndexTTS2:
+                     emo_audio_prompt, emo_alpha,
+                     emo_vector,
+                     use_emo_text, emo_text, use_random, interval_silence,
+-                    verbose, max_text_tokens_per_segment, stream_return, more_segment_before, duration_factor=duration_factor, text_normalization=text_normalization, **generation_kwargs
++                    verbose, max_text_tokens_per_segment, stream_return, more_segment_before,
++                    duration_factor=duration_factor, target_duration_seconds=target_duration_seconds,
++                    text_normalization=text_normalization, **generation_kwargs
+                 ))[0]
+             except IndexError:
+                 return None
+@@ -570,7 +577,8 @@ class IndexTTS2:
+     def infer_generator(self, spk_audio_prompt, text, output_path, lang,
+               emo_audio_prompt=None, emo_alpha=1.0, emo_vector=None,
+               use_emo_text=False, emo_text=None, use_random=False, interval_silence=200,
+-              verbose=False, max_text_tokens_per_segment=120, stream_return=False, quick_streaming_tokens=0, duration_factor=1.0, text_normalization=True, **generation_kwargs):
++              verbose=False, max_text_tokens_per_segment=120, stream_return=False, quick_streaming_tokens=0,
++              duration_factor=1.0, target_duration_seconds=None, text_normalization=True, **generation_kwargs):
+         print(">> starting inference...")
+         self._set_gr_progress(0, "starting inference...")
+         if verbose:
+@@ -704,7 +712,7 @@ class IndexTTS2:
+         if text_normalization:
+             if lang.lower() in ['zh', 'zhen', 'en']:
+                 text = self.text_process.normalize(text)
+-            elif lang.lower() in ['ja', 'es']:
++            elif lang.lower() in ['ja', 'es', 'ar']:
+                 text = nemo_text_normalize(text, lang.lower())
+             print(f'text after normalization: {text}')
+ 
+@@ -719,6 +727,16 @@ class IndexTTS2:
+         text = re.sub(r'<\|([^|]+)\|>', lambda m: f'<|{m.group(1).upper()}|>', text)
+         segments = self.split_text_by_tokens(text, max_text_tokens_per_segment, lang_prefix)
+         segments_count = len(segments)
++        if target_duration_seconds is not None:
++            target_duration_seconds = float(target_duration_seconds)
++            if target_duration_seconds <= 0:
++                raise ValueError("target_duration_seconds must be greater than zero")
++            if segments_count != 1:
++                raise ValueError(
++                    "Exact duration mode requires one internal text segment; shorten the input "
++                    "or increase max_text_tokens_per_segment."
++                )
++        self.last_duration_control = None
+         segment_tokens = []
+         for seg_text in segments:
+             toks = self.tokenizer.encode(lang_prefix + seg_text, allowed_special='all')
+@@ -779,7 +797,7 @@ class IndexTTS2:
+                         emo_vec=emovec,
+                         campplus_embedding=style,
+                         wav=spk_audio_prompt,
+-                        do_sample=True,
++                        do_sample=do_sample,
+                         top_p=top_p,
+                         top_k=top_k,
+                         temperature=temperature,
+@@ -852,7 +870,20 @@ class IndexTTS2:
+                     if self.use_gpt_latent:
+                         latent = self.s2mel.models['gpt_layer'](latent)
+                         S_infer = S_infer + latent
+-                    target_lengths = torch.LongTensor([int(S_infer.shape[1] * 1.72 * duration_factor)]).to(codes.device)
++                    nominal_frames = max(1, int(S_infer.shape[1] * 1.72 * duration_factor))
++                    if target_duration_seconds is None:
++                        target_frames = nominal_frames
++                    else:
++                        sample_rate = int(self.cfg.s2mel["preprocess_params"]["sr"])
++                        hop_length = int(self.cfg.s2mel["preprocess_params"]["spect_params"]["hop_length"])
++                        target_frames = max(1, int(round(target_duration_seconds * sample_rate / hop_length)))
++                        self.last_duration_control = {
++                            "target_duration_seconds": target_duration_seconds,
++                            "natural_duration_seconds": nominal_frames * hop_length / sample_rate,
++                            "duration_factor": target_frames / nominal_frames,
++                            "target_frames": target_frames,
++                        }
++                    target_lengths = torch.LongTensor([target_frames]).to(codes.device)
+ 
+                     cond = self.s2mel.models['length_regulator'](S_infer,
+                                                                  ylens=target_lengths,
+@@ -889,6 +920,12 @@ class IndexTTS2:
+         self._set_gr_progress(0.9, "saving audio...")
+         wavs = self.insert_interval_silence(wavs, sampling_rate=sampling_rate, interval_silence=interval_silence)
+         wav = torch.cat(wavs, dim=1)
++        if target_duration_seconds is not None:
++            target_samples = max(1, int(round(target_duration_seconds * sampling_rate)))
++            if wav.shape[-1] > target_samples:
++                wav = wav[:, :target_samples]
++            elif wav.shape[-1] < target_samples:
++                wav = F.pad(wav, (0, target_samples - wav.shape[-1]))
+         wav_length = wav.shape[-1] / sampling_rate
+         print(f">> gpt_gen_time: {gpt_gen_time:.2f} seconds")
+         print(f">> gpt_forward_time: {gpt_forward_time:.2f} seconds")

@@ -1,0 +1,62 @@
+[project]
+name = "indextts-dubflow"
+version = "0.2.0"
+description = "Cross-platform original-voice video translation and dubbing workflow powered by IndexTTS 2.5"
+readme = "README.md"
+requires-python = ">=3.10,<3.12"
+license = "MIT"
+authors = [{name = "jasonBrom"}]
+keywords = ["indextts", "video-dubbing", "voice-cloning", "translation", "gradio"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Operating System :: Microsoft :: Windows",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Topic :: Multimedia :: Sound/Audio :: Speech",
+]
+dependencies = [
+  "gradio==5.45.0",
+  "librosa>=0.10,<1",
+  "numpy>=2.0,<3",
+  "soundfile>=0.12,<1",
+  "socksio>=1,<2",
+  "faster-whisper>=1.1,<2",
+  "PyYAML>=6,<7",
+]
+
+[project.optional-dependencies]
+test = ["build>=1,<2", "pytest>=8,<9", "ruff>=0.12,<1"]
+
+[project.scripts]
+indextts-dubflow = "app:main"
+
+[project.urls]
+Homepage = "https://github.com/jasonBrom/IndexTTS-DubFlow"
+Repository = "https://github.com/jasonBrom/IndexTTS-DubFlow"
+Documentation = "https://github.com/jasonBrom/IndexTTS-DubFlow#readme"
+Issues = "https://github.com/jasonBrom/IndexTTS-DubFlow/issues"
+
+[build-system]
+requires = ["setuptools>=75", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["app"]
+
+[tool.setuptools.packages.find]
+include = ["original_dubber*", "scripts*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["B008", "E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"scripts/*.py" = ["E402"]

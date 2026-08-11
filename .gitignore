@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+build/
+dist/
+
+# Environments and downloaded runtimes/models
+.venv/
+.runtime/
+index-tts/
+checkpoints/
+models/
+hf_cache/
+
+# Generated outputs and local configuration
+artifacts/
+outputs/
+IndexTTS_Dubber_Outputs/
+*.log
+*.pid
+.env
+.env.local
+
+# Editors and operating systems
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Large media/weights must not enter Git history
+*.pth
+*.pt
+*.ckpt
+*.safetensors
+*.bin
+*.onnx
+*.gguf
+*.wav
+*.flac
+*.mp3
+*.mp4
+*.mkv
+*.mov

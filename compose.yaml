@@ -1,0 +1,19 @@
+services:
+  dubber:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    gpus: all
+    ports:
+      - "7860:7860"
+    environment:
+      MODEL_SOURCE: ${MODEL_SOURCE:-modelscope}
+      GRADIO_AUTH: ${GRADIO_AUTH:-}
+      AUTO_SETUP: ${AUTO_SETUP:-1}
+    volumes:
+      - indextts-dubflow-runtime:/runtime
+      - ./outputs:/outputs
+    command: ["web", "--server-name", "0.0.0.0", "--server-port", "7860"]
+
+volumes:
+  indextts-dubflow-runtime:
