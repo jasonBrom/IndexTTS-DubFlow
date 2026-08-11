@@ -53,7 +53,7 @@ def test_app_bootstrap_does_not_import_gradio_or_torch() -> None:
         ],
         cwd=root,
         check=True,
-        text=True,
+        encoding="utf-8",
         capture_output=True,
     )
     assert result.stdout.strip() == "0 0"
@@ -79,7 +79,7 @@ def test_cross_platform_installer_dry_run() -> None:
         [sys.executable, "scripts/setup_runtime.py", "--dry-run"],
         cwd=root,
         check=True,
-        text=True,
+        encoding="utf-8",
         capture_output=True,
     )
     assert "IndexTTS" in result.stdout
