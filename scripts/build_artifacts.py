@@ -26,6 +26,18 @@ EXCLUDED_DIRS = {
 EXCLUDED_SUFFIXES = {".pyc", ".pyo"}
 
 
+def configure_utf8_stdio() -> None:
+    """Keep redirected Windows output from falling back to a legacy code page."""
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is None:
+            continue
+        try:
+            reconfigure(encoding="utf-8", errors="replace")
+        except (OSError, ValueError):
+            pass
+
+
 def source_files() -> list[Path]:
     result: list[Path] = []
     for path in ROOT.rglob("*"):
@@ -535,6 +547,7 @@ def make_notebook(bundle: bytes, *, notebook_name: str, visible_log_edition: boo
 
 
 def main() -> None:
+    configure_utf8_stdio()
     ARTIFACTS.mkdir(parents=True, exist_ok=True)
     NOTEBOOKS.mkdir(parents=True, exist_ok=True)
     embedded_bundle = make_zip_bytes()
