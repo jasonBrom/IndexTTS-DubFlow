@@ -32,7 +32,8 @@ def _allocated_bytes(path: Path) -> int:
         if identity in seen:
             continue
         seen.add(identity)
-        total += stat.st_blocks * 512 if stat.st_blocks else stat.st_size
+        blocks = getattr(stat, "st_blocks", 0)
+        total += blocks * 512 if blocks else stat.st_size
     return total
 
 

@@ -18,6 +18,18 @@ from original_dubber.platforms import runtime_paths, venv_executable
 PINNED_COMMIT = "ccd81054de9859faeb19b773fff0e2e1ae9e959e"
 
 
+def configure_utf8_stdio() -> None:
+    """Keep redirected Windows output from falling back to a legacy code page."""
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is None:
+            continue
+        try:
+            reconfigure(encoding="utf-8", errors="replace")
+        except (OSError, ValueError):
+            pass
+
+
 def command_text(command: list[str]) -> str:
     return subprocess.list2cmdline(command)
 
@@ -134,6 +146,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
+    configure_utf8_stdio()
     args = parse_args()
     paths = runtime_paths(args.runtime_root)
     index_dir = (args.index_dir or paths.indextts).expanduser().resolve()
@@ -248,4 +261,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
