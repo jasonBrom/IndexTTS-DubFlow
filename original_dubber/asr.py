@@ -34,6 +34,54 @@ EXTERNAL_ASR_MODELS = {
     "qwen3-asr-1.7b": "Qwen3-ASR-1.7B + ForcedAligner",
     "fun-asr-nano-2512": "Fun-ASR-Nano-2512",
 }
+EXTERNAL_RUNTIME_MARKER = ".ready-v3"
+PARENT_ENVIRONMENT_PTH = "indextts_parent_environment.pth"
+QWEN_RUNTIME_PROBE = (
+    "import transformers; "
+    "assert transformers.__version__ == '4.57.6', "
+    "f'unexpected transformers {transformers.__version__} at {transformers.__file__}'; "
+    "from qwen_asr import Qwen3ASRModel; "
+    "print(f'Qwen3-ASR import OK: transformers "
+    "{transformers.__version__} ({transformers.__file__})')"
+)
+
+
+def _configure_external_venv_parent_path(
+    venv_root: Path,
+    python: Path,
+    parent_site: str | Path,
+) -> Path:
+    """Share parent-only packages without letting them shadow ASR dependencies."""
+    legacy_bridge = venv_root / PARENT_ENVIRONMENT_PTH
+    legacy_bridge.unlink(missing_ok=True)
+
+    config = venv_root / "pyvenv.cfg"
+    if config.is_file():
+        source = config.read_text(encoding="utf-8")
+        updated, replacements = re.subn(
+            r"^include-system-site-packages\s*=\s*true\s*$",
+            "include-system-site-packages = false",
+            source,
+            flags=re.IGNORECASE | re.MULTILINE,
+        )
+        if not replacements and not re.search(
+            r"^include-system-site-packages\s*=", source, re.IGNORECASE | re.MULTILINE
+        ):
+            updated = source.rstrip() + "\ninclude-system-site-packages = false\n"
+        if updated != source:
+            config.write_text(updated, encoding="utf-8")
+
+    external_site = subprocess.check_output(
+        [
+            str(python),
+            "-c",
+            "import sysconfig; print(sysconfig.get_path('purelib'))",
+        ],
+        text=True,
+    ).strip()
+    bridge = Path(external_site) / PARENT_ENVIRONMENT_PTH
+    bridge.write_text(str(Path(parent_site).resolve()) + "\n", encoding="utf-8")
+    return bridge
 
 
 def parse_hotword_spec(*values: str) -> tuple[list[str], dict[str, str]]:
@@ -254,7 +302,8 @@ class ExternalASR:
 
     def _ensure_runtime(self, progress: Callable[[float, str], None] | None) -> None:
         root = self.backend_root
-        marker = root / ".ready-v2"
+        marker = root / EXTERNAL_RUNTIME_MARKER
+        venv_root = root / ".venv"
         root.mkdir(parents=True, exist_ok=True)
         if not self.python.is_file():
             _run_visible(
@@ -262,18 +311,15 @@ class ExternalASR:
                     sys.executable,
                     "-m",
                     "venv",
-                    "--system-site-packages",
-                    str(root / ".venv"),
+                    str(venv_root),
                 ],
                 label=f"创建隔离环境 {self.backend}",
                 progress=progress,
             )
-        external_site = subprocess.check_output(
-            [str(self.python), "-c", "import site; print(site.getsitepackages()[0])"],
-            text=True,
-        ).strip()
-        Path(external_site, "indextts_parent_environment.pth").write_text(
-            sysconfig.get_paths()["purelib"] + "\n", encoding="utf-8"
+        _configure_external_venv_parent_path(
+            venv_root,
+            self.python,
+            sysconfig.get_paths()["purelib"],
         )
         if marker.is_file():
             return
@@ -321,6 +367,16 @@ class ExternalASR:
                 progress,
             )
             self._pip(["--no-deps", "-e", str(repository)], progress)
+        if self.backend == "qwen3-asr-1.7b":
+            _run_visible(
+                [
+                    str(self.python),
+                    "-c",
+                    QWEN_RUNTIME_PROBE,
+                ],
+                label="验证 Qwen3-ASR 隔离环境",
+                progress=progress,
+            )
         marker.write_text(time.strftime("%Y-%m-%dT%H:%M:%S%z"), encoding="utf-8")
 
     def transcribe(

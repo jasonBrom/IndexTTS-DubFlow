@@ -12,6 +12,9 @@ import soundfile as sf
 import original_dubber.media as media_module
 import scripts.translation_worker as translation_worker_module
 from original_dubber.asr import (
+    PARENT_ENVIRONMENT_PTH,
+    QWEN_RUNTIME_PROBE,
+    _configure_external_venv_parent_path,
     apply_hotword_replacements,
     normalize_asr_segments,
     parse_hotword_spec,
@@ -65,6 +68,58 @@ def test_virtualenv_executable_layouts_are_cross_platform(tmp_path: Path) -> Non
     assert venv_executable(venv, windows=True) == venv / "Scripts" / "python.exe"
 
 
+def test_external_asr_parent_bridge_keeps_child_packages_first(tmp_path: Path) -> None:
+    venv = tmp_path / ".venv"
+    subprocess.run([sys.executable, "-m", "venv", str(venv)], check=True)
+    python = venv_executable(venv)
+    child_site = Path(
+        subprocess.check_output(
+            [
+                str(python),
+                "-c",
+                "import sysconfig; print(sysconfig.get_path('purelib'))",
+            ],
+            text=True,
+        ).strip()
+    )
+    parent_site = tmp_path / "parent-site"
+    parent_package = parent_site / "dubflow_shadow_probe"
+    child_package = child_site / "dubflow_shadow_probe"
+    parent_package.mkdir(parents=True)
+    child_package.mkdir(parents=True)
+    (parent_package / "__init__.py").write_text("SOURCE = 'parent'\n", encoding="utf-8")
+    (child_package / "__init__.py").write_text("SOURCE = 'child'\n", encoding="utf-8")
+
+    legacy_bridge = venv / PARENT_ENVIRONMENT_PTH
+    legacy_bridge.write_text(str(parent_site) + "\n", encoding="utf-8")
+    config = venv / "pyvenv.cfg"
+    config.write_text(
+        config.read_text(encoding="utf-8").replace(
+            "include-system-site-packages = false",
+            "include-system-site-packages = true",
+        ),
+        encoding="utf-8",
+    )
+
+    bridge = _configure_external_venv_parent_path(venv, python, parent_site)
+
+    assert bridge == child_site / PARENT_ENVIRONMENT_PTH
+    assert bridge.read_text(encoding="utf-8").strip() == str(parent_site.resolve())
+    assert not legacy_bridge.exists()
+    assert "include-system-site-packages = false" in config.read_text(encoding="utf-8")
+    result = subprocess.run(
+        [str(python), "-c", "import dubflow_shadow_probe; print(dubflow_shadow_probe.SOURCE)"],
+        check=True,
+        encoding="utf-8",
+        capture_output=True,
+    )
+    assert result.stdout.strip() == "child"
+
+
+def test_qwen_runtime_probe_is_valid_python() -> None:
+    compile(QWEN_RUNTIME_PROBE, "<qwen-runtime-probe>", "exec")
+
+
 def test_runtime_paths_honor_single_relocatable_root(tmp_path: Path) -> None:
     paths = runtime_paths(tmp_path / "runtime")
     assert paths.indextts == (tmp_path / "runtime" / "index-tts").resolve()
@@ -84,6 +139,8 @@ def test_cross_platform_installer_dry_run() -> None:
     )
     assert "IndexTTS" in result.stdout
     assert ".runtime" in result.stdout
+    installer = (root / "scripts" / "setup_runtime.py").read_text(encoding="utf-8")
+    assert 'packages.append("modelscope>=1.28,<2")' not in installer
 
 
 def test_empty_optional_gradio_text_values_are_normalized(tmp_path: Path) -> None:

@@ -45,6 +45,19 @@ T4 不支持 BF16，应用会自动使用 FP32。它会增加显存与时间开�
 
 Web 启动不会加载大模型。点击分析后才会创建可选 ASR/翻译运行时并下载权重。查看后台完整日志，而不是只看 Gradio 的最后一行包装错误。
 
+## Windows 上 Qwen3-ASR 报 `transformers.masking_utils`
+
+这是旧版 R7 在 Windows 上把 IndexTTS 父环境排在 Qwen 子环境之前造成的依赖串用。更新到包含 `.ready-v3` 运行时迁移的版本后再次选择 Qwen3-ASR，程序会自动移动父环境桥接文件、关闭 `system-site-packages`，并在写入就绪标记前验证 `transformers==4.57.6` 与 Qwen3-ASR 导入。
+
+可用下面的命令确认实际加载位置：
+
+```powershell
+$Py = ".\.runtime\asr-runtimes\qwen3-asr-1.7b\.venv\Scripts\python.exe"
+& $Py -c "import transformers; print(transformers.__version__); print(transformers.__file__)"
+```
+
+正确结果应为 `4.57.6`，且路径位于 `asr-runtimes\qwen3-asr-1.7b\.venv\Lib\site-packages`，而不是 `index-tts\.venv`。
+
 ## 配置自检失败
 
 运行：
@@ -63,4 +76,3 @@ Web 启动不会加载大模型。点击分析后才会创建可选 ASR/翻译�
 ## macOS / 非 NVIDIA GPU 很慢
 
 这是当前上游 CUDA 依赖边界。Web、字幕、NLLB、部分 ASR 可在 CPU 跑，但完整视频 TTS 不保证具有可接受速度。不要把安装成功等同于完整 GPU 推理已受支持。
-
