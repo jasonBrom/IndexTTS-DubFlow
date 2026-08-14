@@ -196,8 +196,8 @@ def main() -> int:
         "PyYAML>=6,<7",
         "huggingface-hub>=0.34,<1",
     ]
-    if args.model_source == "modelscope":
-        packages.append("modelscope>=1.28,<2")
+    # Keep the ModelScope version pinned by IndexTTS. External ASR runtimes
+    # install their newer, incompatible ModelScope requirements in child venvs.
     if args.with_demucs:
         packages.append("demucs>=4,<5")
     if args.with_diarization:
