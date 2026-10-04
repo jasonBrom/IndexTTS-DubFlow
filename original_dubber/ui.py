@@ -15,7 +15,7 @@ from .platforms import runtime_paths
 from .subtitles import import_reviewed_timeline
 from .utils import file_fingerprint, safe_name, write_srt
 
-BUILD_VERSION = "2026.08.11-r7-ccd8105"
+BUILD_VERSION = "2026.10.05-r8-index"
 TIMELINE_HEADERS = [
     "启用", "开始秒", "原结束秒", "说话人", "原文", "译文", "锁定人工译文",
     "情感描述", "原时长", "实际结束秒", "自然时长", "速度倍率", "状态",
@@ -164,6 +164,11 @@ def _make_config(
     use_bf16: bool,
     use_cuda_kernel: bool,
     authorized: bool,
+    index_api_base: str = "",
+    index_api_key: str = "",
+    index_model: str = "",
+    index_syllables_per_second: float = 4.5,
+    index_max_tokens: int = 1024,
 ) -> DubConfig:
     if not authorized:
         raise ValueError("必须确认已获得视频、声音和翻译所需授权，才能开始处理。")
@@ -212,6 +217,9 @@ def _make_config(
         "NLLB-200 离线": "nllb",
         "兼容 Chat Completions API": "llm",
         "不翻译/手工编辑": "none",
+        "Index-Translate 官方公网 API": "index_public",
+        "Index-Translate 本地/自建服务": "index",
+        "Index-Homura 音节控制（自建服务）": "homura",
     }
     subtitle_mode_map = {
         "不上传字幕，使用 ASR": "none",
@@ -246,6 +254,11 @@ def _make_config(
         llm_api_base=llm_api_base,
         llm_api_key=llm_api_key,
         llm_model=llm_model,
+        index_api_base=_optional_text(index_api_base).strip() or "http://127.0.0.1:8000/v1",
+        index_api_key=_optional_text(index_api_key).strip(),
+        index_model=_optional_text(index_model).strip(),
+        index_syllables_per_second=float(4.5 if index_syllables_per_second is None else index_syllables_per_second),
+        index_max_tokens=int(1024 if index_max_tokens is None else index_max_tokens),
         separate_background=separate_background,
         protect_singing_vocals=protect_singing_vocals,
         diarization=diarization,
@@ -413,9 +426,60 @@ def build_app() -> gr.Blocks:
 
         with gr.Tab("3. 高级设置"):
             translation_backend = gr.Radio(
-                ["HY-MT2-7B 本地（推荐）", "NLLB-200 离线", "兼容 Chat Completions API", "不翻译/手工编辑"],
+                ["HY-MT2-7B 本地（推荐）", "Index-Translate 官方公网 API",
+                 "Index-Translate 本地/自建服务", "Index-Homura 音节控制（自建服务）",
+                 "NLLB-200 离线", "兼容 Chat Completions API", "不翻译/手工编辑"],
                 value="HY-MT2-7B 本地（推荐）",
                 label="翻译方式",
+            )
+            with gr.Group(visible=False) as index_settings:
+                index_notice = gr.Markdown()
+                with gr.Group() as index_server_settings:
+                    with gr.Row():
+                        index_api_base = gr.Textbox(
+                            label="Index 服务地址", value="http://127.0.0.1:8000/v1"
+                        )
+                        index_model = gr.Dropdown(
+                            choices=["IndexTeam/Index-Translate-2B", "IndexTeam/Index-Translate-9B",
+                                     "IndexTeam/Index-Translate-35B-A3B-preview"],
+                            value="IndexTeam/Index-Translate-2B", allow_custom_value=True,
+                            label="Index 模型名（与服务端保持一致）",
+                        )
+                        index_api_key = gr.Textbox(label="Index 服务密钥（无鉴权可留空）", type="password")
+                with gr.Row():
+                    index_syllables_per_second = gr.Slider(
+                        1, 12, value=4.5, step=0.1, visible=False,
+                        label="Homura 目标语速（音节/秒，经验估算）",
+                    )
+                    index_max_tokens = gr.Slider(
+                        128, 8192, value=1024, step=128, label="Index 单句最大输出 token 数"
+                    )
+
+            def update_index_settings(backend):
+                public = backend == "Index-Translate 官方公网 API"
+                homura = backend == "Index-Homura 音节控制（自建服务）"
+                enabled = public or homura or backend == "Index-Translate 本地/自建服务"
+                family = "Homura" if homura else "Translate"
+                choices = [f"IndexTeam/Index-{family}-{size}" for size in ("2B", "9B")]
+                if not homura:
+                    choices.append("IndexTeam/Index-Translate-35B-A3B-preview")
+                notice = (
+                    "使用官方 35B-A3B 公网 API，无需密钥和本地翻译显卡。"
+                    "原文、相邻句上下文和术语表会发送至 B 站官方服务；音视频仍在本机处理。"
+                    "服务可用性及限流以官方为准。"
+                    if public else
+                    "连接你已启动的 vLLM / llama.cpp 等兼容服务，不会自动下载模型。"
+                    "Colab 的 localhost 指 Colab 机器；电脑上的服务需填写可访问的地址。"
+                )
+                if homura:
+                    notice += " 音节目标 = 原句秒数 × 目标语速；并非音频秒数保证，仍会执行 TTS 时间规划。"
+                return (gr.update(visible=enabled), notice, gr.update(visible=not public),
+                        gr.update(choices=choices, value=choices[0]), gr.update(visible=homura))
+
+            translation_backend.change(
+                update_index_settings, inputs=[translation_backend],
+                outputs=[index_settings, index_notice, index_server_settings,
+                         index_model, index_syllables_per_second],
             )
             with gr.Row():
                 hymt2_model = gr.Dropdown(
@@ -517,6 +581,7 @@ def build_app() -> gr.Blocks:
             diarization, hf_token,
             emotion_mode, emotion_strength, subtitle_mode, original_audio_volume,
             use_bf16, use_cuda_kernel, authorized,
+            index_api_base, index_api_key, index_model, index_syllables_per_second, index_max_tokens,
         ]
 
         def analyze_ui(*values, progress=gr.Progress(track_tqdm=True)):

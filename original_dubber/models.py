@@ -116,6 +116,11 @@ class DubConfig:
     llm_api_base: str = ""
     llm_api_key: str = ""
     llm_model: str = ""
+    index_api_base: str = "http://127.0.0.1:8000/v1"
+    index_api_key: str = ""
+    index_model: str = ""
+    index_syllables_per_second: float = 4.5
+    index_max_tokens: int = 1024
     separate_background: bool = True
     protect_singing_vocals: bool = True
     singing_model: str = "MIT/ast-finetuned-audioset-10-10-0.4593"
@@ -158,8 +163,27 @@ class DubConfig:
             self.llm_api_base and self.llm_api_key and self.llm_model
         ):
             raise ValueError("LLM API 翻译需要 API 地址、密钥和模型名")
-        if self.translation_backend not in {"nllb", "hymt2", "llm", "none"}:
+        if self.translation_backend not in {"nllb", "hymt2", "llm", "none", "index_public", "index", "homura"}:
             raise ValueError(f"未知翻译方式：{self.translation_backend}")
+        if self.translation_backend in {"index_public", "index", "homura"}:
+            from .index_translation import (
+                HOMURA_MODEL,
+                PUBLIC_API_BASE,
+                PUBLIC_MODEL,
+                TRANSLATE_MODEL,
+                IndexTranslator,
+            )
+            public = self.translation_backend == "index_public"
+            IndexTranslator(
+                api_base=PUBLIC_API_BASE if public else self.index_api_base,
+                model=PUBLIC_MODEL if public else (self.index_model or (
+                    HOMURA_MODEL if self.translation_backend == "homura" else TRANSLATE_MODEL
+                )),
+                context_size=self.translation_context_segments,
+                glossary=self.translation_glossary,
+                syllables_per_second=self.index_syllables_per_second,
+                max_tokens=self.index_max_tokens,
+            )
         if self.translation_context_segments < 0 or self.translation_context_segments > 12:
             raise ValueError("翻译上下文句数必须在 0～12 之间")
         if self.hymt2_quantization not in {"auto", "4bit", "bf16"}:
@@ -186,5 +210,6 @@ class DubConfig:
     def public_dict(self) -> dict[str, Any]:
         value = asdict(self)
         value["llm_api_key"] = "***" if self.llm_api_key else ""
+        value["index_api_key"] = "***" if self.index_api_key else ""
         value["hf_token"] = "***" if self.hf_token else ""
         return value

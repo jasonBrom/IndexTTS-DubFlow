@@ -384,6 +384,11 @@ def translate_segments(
     style: str = "自然、准确、符合人物身份的影视对白",
     glossary: str = "",
     hymt2_quantization: str = "auto",
+    index_api_base: str = "http://127.0.0.1:8000/v1",
+    index_api_key: str = "",
+    index_model: str = "",
+    index_syllables_per_second: float = 4.5,
+    index_max_tokens: int = 1024,
     progress: Callable[[float, str], None] | None = None,
 ) -> list[Segment]:
     if not segments:
@@ -415,6 +420,28 @@ def translate_segments(
         )
     elif backend == "llm":
         translator = ChatCompletionsTranslator(api_base, api_key, api_model)
+    elif backend in {"index_public", "index", "homura"}:
+        from .index_translation import (
+            HOMURA_MODEL,
+            PUBLIC_API_BASE,
+            PUBLIC_MODEL,
+            TRANSLATE_MODEL,
+            IndexTranslator,
+        )
+        public = backend == "index_public"
+        translator = IndexTranslator(
+            api_base=PUBLIC_API_BASE if public else index_api_base,
+            api_key="" if public else index_api_key,
+            model=PUBLIC_MODEL if public else (index_model or (
+                HOMURA_MODEL if backend == "homura" else TRANSLATE_MODEL
+            )),
+            homura=backend == "homura",
+            context_size=context_size,
+            style=style,
+            glossary=glossary,
+            syllables_per_second=index_syllables_per_second,
+            max_tokens=index_max_tokens,
+        )
     else:
         raise ValueError(f"未知翻译后端：{backend}")
     translator.translate(

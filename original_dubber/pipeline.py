@@ -140,6 +140,10 @@ class OriginalVoiceDubber:
                 self.config.hymt2_quantization,
                 self.config.llm_api_base,
                 self.config.llm_model,
+                self.config.index_api_base,
+                self.config.index_model,
+                self.config.index_syllables_per_second,
+                self.config.index_max_tokens,
                 self.config.separate_background,
                 self.config.protect_singing_vocals,
                 self.config.singing_model,
@@ -348,6 +352,11 @@ class OriginalVoiceDubber:
                 style=self.config.translation_style,
                 glossary=self.config.translation_glossary,
                 hymt2_quantization=self.config.hymt2_quantization,
+                index_api_base=self.config.index_api_base,
+                index_api_key=self.config.index_api_key,
+                index_model=self.config.index_model,
+                index_syllables_per_second=self.config.index_syllables_per_second,
+                index_max_tokens=self.config.index_max_tokens,
                 progress=lambda value, text: progress(0.66 + value * 0.18, text),
             )
         progress(0.86, "建立说话人音色与逐句情感参考")

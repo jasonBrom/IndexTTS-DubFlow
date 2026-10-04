@@ -24,3 +24,8 @@ Optional ASR backends are downloaded only when selected. Their authoritative cod
 - Pyannote Audio: https://github.com/pyannote/pyannote-audio
 
 Isolation of their Python dependencies does not change the upstream model licenses or usage obligations.
+
+Optional Index-Translate and Index-Homura services use model-specific upstream terms.
+The client follows the prompt and request protocols documented by the Index team;
+model weights and upstream inference implementations are not bundled.
+Authoritative code, model links and licenses: https://github.com/bilibili/Index-Translate

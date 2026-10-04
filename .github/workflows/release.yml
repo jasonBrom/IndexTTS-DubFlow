@@ -27,7 +27,7 @@ jobs:
         with:
           generate_release_notes: true
           files: |
-            artifacts/IndexTTS_DubFlow_Source_v0.2.0.zip
-            artifacts/IndexTTS_DubFlow_Colab_R7.ipynb
-            artifacts/IndexTTS_DubFlow_Colab_R7_Compact.ipynb
+            artifacts/IndexTTS_DubFlow_Source_v0.3.0.zip
+            artifacts/IndexTTS_DubFlow_Colab_R8.ipynb
+            artifacts/IndexTTS_DubFlow_Colab_R8_Compact.ipynb
             artifacts/SHA256SUMS.txt
