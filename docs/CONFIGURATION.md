@@ -56,3 +56,7 @@ GRADIO_AUTH=username:strong-password
 
 项目名、视频指纹和目标语言决定任务目录。逐句 TTS 缓存键还包含译文、时间窗、说话人、参考音频指纹、情感模式和随机种子，因此人工修改某句后只重做受影响片段。
 
+
+## Index 翻译
+
+见 [Index-Translate / Homura 接入说明](INDEX_TRANSLATE.md)。新增后端 `index_public`、`index`、`homura`。自建服务配置为 `index_api_base`、`index_api_key`、`index_model`；音节控制为 `index_syllables_per_second`（默认 4.5），输出预算为 `index_max_tokens`（默认 1024）。公网预设使用固定官方地址与模型名，忽略自建地址和密钥。

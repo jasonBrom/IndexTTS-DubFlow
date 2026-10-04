@@ -9,7 +9,7 @@
 ```bash
 git init
 git add .
-git commit -m "feat: release IndexTTS-DubFlow v0.2.0"
+git commit -m "feat: release IndexTTS-DubFlow v0.3.0"
 git branch -M main
 git remote add origin https://github.com/jasonBrom/IndexTTS-DubFlow.git
 git push -u origin main
@@ -41,15 +41,15 @@ python scripts/build_artifacts.py --check
 
 ```bash
 git status --short
-git tag -a v0.2.0 -m "IndexTTS-DubFlow v0.2.0"
-git push origin v0.2.0
+git tag -a v0.3.0 -m "IndexTTS-DubFlow v0.3.0"
+git push origin v0.3.0
 ```
 
 `.github/workflows/release.yml` 会构建并上传：
 
 - GitHub-ready 源码 ZIP；
-- R7 可见日志版 Colab Notebook；
-- R7 精简版 Colab Notebook；
+- R8 可见日志版 Colab Notebook；
+- R8 精简版 Colab Notebook；
 - SHA256 校验文件。
 
 ## 版本策略

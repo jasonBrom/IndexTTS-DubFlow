@@ -2,8 +2,8 @@ cff-version: 1.2.0
 message: "If you use IndexTTS-DubFlow, cite this repository and the upstream IndexTTS 2.5 paper."
 title: "IndexTTS-DubFlow"
 type: software
-version: 0.2.0
-date-released: 2026-08-11
+version: 0.3.0
+date-released: 2026-10-05
 license: MIT
 repository-code: "https://github.com/jasonBrom/IndexTTS-DubFlow"
 url: "https://github.com/jasonBrom/IndexTTS-DubFlow"

@@ -2,6 +2,15 @@
 
 所有重要变更记录在此文件。版本号遵循 Semantic Versioning。
 
+## [0.3.0] - 2026-10-05
+
+- Add Index-Translate official public 35B-A3B API and self-hosted 2B/9B/35B service support.
+- Add Index-Homura API translation with an adjustable duration-based syllable budget.
+- Preserve context, glossary, style, locked translations and the existing IndexTTS 2.5 pipeline.
+- Handle transient API failures, malformed/empty/truncated output and reasoning-only responses.
+- Add configuration validation, key redaction, cache invalidation, integration tests and an API smoke-test CLI.
+- Refresh embedded Colab notebooks to R8. Local GPU inference and full-video dubbing remain unverified.
+
 ## [0.2.0] - 2026-08-11
 
 ### Added

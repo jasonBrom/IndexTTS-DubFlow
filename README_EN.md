@@ -12,7 +12,7 @@ through GitHub Camo when rendering this README. Do not commit rendered camo.gith
 hash URLs because they are not portable source links.
 -->
 
-[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jasonBrom/IndexTTS-DubFlow/blob/main/notebooks/IndexTTS_DubFlow_Colab_R7.ipynb)
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jasonBrom/IndexTTS-DubFlow/blob/main/notebooks/IndexTTS_DubFlow_Colab_R8.ipynb)
 [![CI](https://github.com/jasonBrom/IndexTTS-DubFlow/actions/workflows/ci.yml/badge.svg)](https://github.com/jasonBrom/IndexTTS-DubFlow/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/jasonBrom/IndexTTS-DubFlow)](https://github.com/jasonBrom/IndexTTS-DubFlow/releases)
 [![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11-3776AB)](https://www.python.org/)
@@ -29,7 +29,8 @@ hash URLs because they are not portable source links.
 
 IndexTTS-DubFlow is an end-to-end video localization pipeline. It separates dialogue and background audio, transcribes and translates speech, reproduces each speaker's timbre and emotion, prioritizes natural speech timing, and produces a dubbed video together with editable timelines, subtitles, isolated audio, and quality-control artifacts.
 
-Current release: `v0.2.0 / R7`  
+Current release: `v0.3.0 / R8`
+
 Pinned upstream IndexTTS 2.5 commit: `ccd81054de9859faeb19b773fff0e2e1ae9e959e`
 
 ## Highlights
@@ -38,6 +39,7 @@ Pinned upstream IndexTTS 2.5 commit: `ccd81054de9859faeb19b773fff0e2e1ae9e959e`
 - Demucs dialogue/background separation and AST-based singing-vocal protection.
 - Faster-Whisper, FireRedASR2/2S, Qwen3-ASR-1.7B + ForcedAligner, and Fun-ASR-Nano.
 - Text/file hotwords and deterministic `wrong=>correct` substitutions.
+- Index-Translate public/self-hosted APIs and Index-Homura syllable control ([setup](docs/INDEX_TRANSLATE.md)).
 - HY-MT2-7B/1.8B, NLLB, Chat Completions-compatible APIs, and manual translations.
 - Editable JSON/SRT/VTT/ASS/SSA timelines; locked human translations survive resumed runs.
 - Per-speaker timbre references, per-segment source emotion, and QwenEmotion text control.
@@ -47,10 +49,10 @@ Pinned upstream IndexTTS 2.5 commit: `ccd81054de9859faeb19b773fff0e2e1ae9e959e`
 
 ## Run on Google Colab
 
-[![Open in Google Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jasonBrom/IndexTTS-DubFlow/blob/main/notebooks/IndexTTS_DubFlow_Colab_R7.ipynb)
+[![Open in Google Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jasonBrom/IndexTTS-DubFlow/blob/main/notebooks/IndexTTS_DubFlow_Colab_R8.ipynb)
 
-- [Visible-log Notebook](notebooks/IndexTTS_DubFlow_Colab_R7.ipynb)
-- [Compact Notebook](notebooks/IndexTTS_DubFlow_Colab_R7_Compact.ipynb)
+- [Visible-log Notebook](notebooks/IndexTTS_DubFlow_Colab_R8.ipynb)
+- [Compact Notebook](notebooks/IndexTTS_DubFlow_Colab_R8_Compact.ipynb)
 
 The Notebook embeds a source snapshot matching this release, so the Colab runtime does not need to clone this repository. L4, A10, and A100 are recommended. T4 falls back from BF16 to FP32 and is slower with less memory headroom.
 

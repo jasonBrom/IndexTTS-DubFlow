@@ -12,9 +12,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 ARTIFACTS = ROOT / "artifacts"
 NOTEBOOKS = ROOT / "notebooks"
-PROJECT_ZIP = ARTIFACTS / "IndexTTS_DubFlow_Source_v0.2.0.zip"
-NOTEBOOK = ARTIFACTS / "IndexTTS_DubFlow_Colab_R7_Compact.ipynb"
-VISIBLE_LOG_NOTEBOOK = ARTIFACTS / "IndexTTS_DubFlow_Colab_R7.ipynb"
+PROJECT_ZIP = ARTIFACTS / "IndexTTS_DubFlow_Source_v0.3.0.zip"
+NOTEBOOK = ARTIFACTS / "IndexTTS_DubFlow_Colab_R8_Compact.ipynb"
+VISIBLE_LOG_NOTEBOOK = ARTIFACTS / "IndexTTS_DubFlow_Colab_R8.ipynb"
 REPO_NOTEBOOK = NOTEBOOKS / NOTEBOOK.name
 REPO_VISIBLE_LOG_NOTEBOOK = NOTEBOOKS / VISIBLE_LOG_NOTEBOOK.name
 CHECKSUMS = ARTIFACTS / "SHA256SUMS.txt"
@@ -123,9 +123,9 @@ def make_notebook(bundle: bytes, *, notebook_name: str, visible_log_edition: boo
                 "基于 IndexTTS 2.5 的原声视频翻译与智能配音工作流。\n\n"
                 "这个 Notebook 自带完整项目源码，可在 Colab 中启动 Gradio Web 面板。支持上传、路径、Google Drive、"
                 "对白/背景分离、歌曲人声保护、多 ASR、热词库、字幕导入、人工译文锁定、智能断句、"
-                "HY-MT2-7B 上下文翻译、原音色/情感配音、自然语速优先时间规划、时间轴导入导出和视频输出。\n\n"
-                "**Web 构建：2026.08.11-r7-ccd8105**。如果打开面板后没有看到 Qwen3/FunASR/FireRedASR2、"
-                "热词库和 HY-MT2，请确认运行的是本 Notebook，而不是旧标签页。\n\n"
+                "Index-Translate / Homura、HY-MT2-7B 上下文翻译、原音色/情感配音、自然语速优先时间规划、时间轴导入导出和视频输出。\n\n"
+                "**Web 构建：2026.10.05-r8-index**。如果打开面板后没有看到 Qwen3/FunASR/FireRedASR2、"
+                "Index 翻译选项，请确认运行的是本 Notebook，而不是旧标签页。\n\n"
                 "> 安装与下载每 10 秒至少输出一次状态；Web 启动每 5 秒输出一次状态。任何失败都会显示日志尾部。\n\n"
                 "> 推荐 L4/A100/A10。T4 不支持 BF16，程序会自动切到 FP32，速度更慢且可能显存不足。\n\n"
                 "> 已跟进 IndexTTS 2.5 正式合并至官方 `main` 的提交 "
@@ -133,6 +133,7 @@ def make_notebook(bundle: bytes, *, notebook_name: str, visible_log_edition: boo
                 "并修复官方 Hub `config.yaml` 当前错误的 2.0 标记与 `/cubefs` 内部路径；"
                 "真实的 2.0 配置仍会被拒绝。"
             ),
+            markdown_cell("R8 新增 Index-Translate 官方公网 API 和自建服务、Homura 音节控制。启动后在高级设置选择；公网模式无需翻译 GPU，但会发送原文、上下文和术语。自建服务需自行部署。详见 `docs/INDEX_TRANSLATE.md`。"),
             markdown_cell("## 1. 运行选项"),
             code_cell(
                 "import os, secrets\n"

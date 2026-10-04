@@ -12,7 +12,7 @@ GitHub Camo 代理、缓存并匿名化这些图片；不要把渲染后的 camo
 哈希地址复制回源码，否则上游图片更新或仓库迁移时容易失效。
 -->
 
-[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jasonBrom/IndexTTS-DubFlow/blob/main/notebooks/IndexTTS_DubFlow_Colab_R7.ipynb)
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jasonBrom/IndexTTS-DubFlow/blob/main/notebooks/IndexTTS_DubFlow_Colab_R8.ipynb)
 [![CI](https://github.com/jasonBrom/IndexTTS-DubFlow/actions/workflows/ci.yml/badge.svg)](https://github.com/jasonBrom/IndexTTS-DubFlow/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/jasonBrom/IndexTTS-DubFlow)](https://github.com/jasonBrom/IndexTTS-DubFlow/releases)
 [![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11-3776AB)](https://www.python.org/)
@@ -29,7 +29,10 @@ GitHub Camo 代理、缓存并匿名化这些图片；不要把渲染后的 camo
 
 IndexTTS-DubFlow 是一套端到端视频译制流水线。它从视频中分离对白与背景，识别并翻译对白，再按人物复刻原音色和情感；时间规划以自然语速为优先，在不推迟句首、不侵占下一句对白的前提下利用真实静音，最终输出译制视频、独立音轨、字幕、可编辑时间轴和质量报告。
 
-当前版本：`v0.2.0 / R7`  
+新增 **Index-Translate 官方公网 API / 自建服务、Index-Homura 音节控制**，保留 IndexTTS 2.5 配音。打开高级设置即可选择。部署与研究结论见 [Index 翻译接入说明](docs/INDEX_TRANSLATE.md)。
+
+当前版本：`v0.3.0 / R8`
+
 固定上游 IndexTTS 2.5 提交：`ccd81054de9859faeb19b773fff0e2e1ae9e959e`
 
 ```mermaid
@@ -58,10 +61,10 @@ flowchart LR
 
 推荐首次使用直接打开完整可见日志版：
 
-[![在 Google Colab 中打开](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jasonBrom/IndexTTS-DubFlow/blob/main/notebooks/IndexTTS_DubFlow_Colab_R7.ipynb)
+[![在 Google Colab 中打开](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jasonBrom/IndexTTS-DubFlow/blob/main/notebooks/IndexTTS_DubFlow_Colab_R8.ipynb)
 
-- [完整可见日志版 Notebook](notebooks/IndexTTS_DubFlow_Colab_R7.ipynb)
-- [精简版 Notebook](notebooks/IndexTTS_DubFlow_Colab_R7_Compact.ipynb)
+- [完整可见日志版 Notebook](notebooks/IndexTTS_DubFlow_Colab_R8.ipynb)
+- [精简版 Notebook](notebooks/IndexTTS_DubFlow_Colab_R8_Compact.ipynb)
 
 Notebook 内嵌与当前版本一致的项目源码，不依赖运行时再次克隆本仓库。推荐使用 L4、A10 或 A100；T4 不支持 BF16，会自动回退到 FP32，速度更慢且更容易出现显存压力。
 
@@ -198,7 +201,7 @@ python scripts/build_artifacts.py --check
 
 ## 发布
 
-仓库已包含三平台 CI、标签发布工作流、Issue/PR 模板、安全策略和可复现交付件生成器。完整步骤见 [GitHub 发布清单](docs/GITHUB_RELEASE.md)。推送 `v0.2.0` 标签后，Actions 会创建 Release 并上传源码包、两种 Colab Notebook 与 SHA256 校验文件。
+仓库已包含三平台 CI、标签发布工作流、Issue/PR 模板、安全策略和可复现交付件生成器。完整步骤见 [GitHub 发布清单](docs/GITHUB_RELEASE.md)。推送 `v0.3.0` 标签后，Actions 会创建 Release 并上传源码包、两种 Colab Notebook 与 SHA256 校验文件。
 
 ## 已知边界
 
